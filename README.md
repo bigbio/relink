@@ -50,32 +50,32 @@ sample1,/path/to/sample1.raw,/path/to/database.fasta,/path/to/xi_linear.conf,/pa
 sample2,/path/to/sample2.raw,/path/to/database.fasta,/path/to/xi_linear.conf,/path/to/xi_crosslinking.conf
 ```
 
-| Column | Description |
-|--------|-------------|
-| `sample` | Sample identifier (unique) |
-| `file` | Path to RAW or MGF file |
-| `fasta` | Path to FASTA database |
-| `xi_linear_config` | Path to xiSEARCH linear configuration file |
+| Column                | Description                                      |
+| --------------------- | ------------------------------------------------ |
+| `sample`              | Sample identifier (unique)                       |
+| `file`                | Path to RAW or MGF file                          |
+| `fasta`               | Path to FASTA database                           |
+| `xi_linear_config`    | Path to xiSEARCH linear configuration file       |
 | `xi_crosslink_config` | Path to xiSEARCH crosslinking configuration file |
 
 ## Parameters
 
 ### Input/Output Options
 
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| `--input` | Path to input samplesheet CSV | Required |
-| `--outdir` | Output directory for results | `./results` |
+| Parameter  | Description                   | Default     |
+| ---------- | ----------------------------- | ----------- |
+| `--input`  | Path to input samplesheet CSV | Required    |
+| `--outdir` | Output directory for results  | `./results` |
 
 ### Analysis Options
 
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| `--do_recalibration` | Perform mass recalibration | `true` |
-| `--do_crosslinking_search` | Perform crosslinking search | `true` |
-| `--do_fdr` | Perform FDR correction | `true` |
-| `--do_mass_error_plots` | Generate mass error plots | `false` |
-| `--link_fdr` | Link-level FDR threshold (%) | `5` |
+| Parameter                  | Description                  | Default |
+| -------------------------- | ---------------------------- | ------- |
+| `--do_recalibration`       | Perform mass recalibration   | `true`  |
+| `--do_crosslinking_search` | Perform crosslinking search  | `true`  |
+| `--do_fdr`                 | Perform FDR correction       | `true`  |
+| `--do_mass_error_plots`    | Generate mass error plots    | `false` |
+| `--link_fdr`               | Link-level FDR threshold (%) | `5`     |
 
 ## Output
 

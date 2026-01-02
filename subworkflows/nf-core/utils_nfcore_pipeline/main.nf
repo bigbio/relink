@@ -217,5 +217,3 @@ def colors(monochrome_logs) {
     colorcodes['red']         = monochrome_logs ? '' : "\033[0;31m"
     return colorcodes
 }
-
-

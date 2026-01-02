@@ -24,13 +24,13 @@ SAMPLE_1,/path/to/data/sample1.raw,/path/to/database.fasta,/path/to/linear.conf,
 SAMPLE_2,/path/to/data/sample2.raw,/path/to/database.fasta,/path/to/linear.conf,/path/to/crosslink.conf
 ```
 
-| Column            | Description                                                                                           |
-| ----------------- | ----------------------------------------------------------------------------------------------------- |
-| `sample`          | Custom sample name. This entry will be identical for multiple sequencing libraries/runs from the same sample. |
-| `file`            | Full path to the RAW or MGF file.                                                                      |
-| `fasta`           | Full path to the FASTA database file.                                                                  |
-| `linear_config`   | Full path to the xiSEARCH configuration file for linear search.                                        |
-| `crosslink_config`| Full path to the xiSEARCH configuration file for crosslinking search.                                  |
+| Column             | Description                                                                                                   |
+| ------------------ | ------------------------------------------------------------------------------------------------------------- |
+| `sample`           | Custom sample name. This entry will be identical for multiple sequencing libraries/runs from the same sample. |
+| `file`             | Full path to the RAW or MGF file.                                                                             |
+| `fasta`            | Full path to the FASTA database file.                                                                         |
+| `linear_config`    | Full path to the xiSEARCH configuration file for linear search.                                               |
+| `crosslink_config` | Full path to the xiSEARCH configuration file for crosslinking search.                                         |
 
 ## Running the pipeline
 
@@ -100,4 +100,3 @@ Specify this when restarting a pipeline. Nextflow will use cached results from a
 ### `-c`
 
 Specify the path to a specific config file (this is a core Nextflow command). See the [nf-core website documentation](https://nf-co.re/usage/configuration) for more information.
-

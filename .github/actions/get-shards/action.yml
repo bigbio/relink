@@ -67,4 +67,3 @@ runs:
         # Debugging output
         echo "Final shard array: $shard"
         echo "Total number of shards: $total_shards"
-

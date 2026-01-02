@@ -4,4 +4,3 @@ workflows:
   - subclass: nfl
     primaryDescriptorPath: /nextflow.config
     publish: True
-

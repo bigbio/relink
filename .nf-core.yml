@@ -35,4 +35,3 @@ template:
   org: bigbio
   outdir: .
   version: 1.0.0dev
-

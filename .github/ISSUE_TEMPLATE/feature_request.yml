@@ -30,4 +30,3 @@ body:
       description: If you have a suggested solution or implementation, please describe it here.
     validations:
       required: false
-

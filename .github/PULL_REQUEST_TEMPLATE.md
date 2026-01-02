@@ -23,4 +23,3 @@ Learn more about contributing: [CONTRIBUTING.md](https://github.com/bigbio/relin
 - [ ] Output Documentation in `docs/output.md` is updated.
 - [ ] `CHANGELOG.md` is updated.
 - [ ] `README.md` is updated (including new samples/samples).
-

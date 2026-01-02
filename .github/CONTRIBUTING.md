@@ -45,4 +45,3 @@ To make the bigbio/relink code and processing logic more understandable for new 
 5. Indent with spaces (4 spaces for Nextflow, 2 spaces for YAML).
 6. Use lowercase for variable names.
 7. Use uppercase for channel names.
-

@@ -13,7 +13,7 @@ tools:
         of crosslinked peptide identifications from xiSEARCH results.
       homepage: https://www.rappsilberlab.org/software/xifdr/
       documentation: https://github.com/Rappsilber-Laboratory/xiFDR
-      licence: ['Apache-2.0']
+      licence: ["Apache-2.0"]
 input:
   - crosslink_results:
       type: file
@@ -44,5 +44,3 @@ authors:
   - "@jbeale2023"
 maintainers:
   - "@ypriverol"
-
-

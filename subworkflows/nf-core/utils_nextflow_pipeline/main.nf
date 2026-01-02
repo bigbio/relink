@@ -100,5 +100,3 @@ def checkCondaChannels() {
         log.debug "Could not check Conda channels: ${e.message}"
     }
 }
-
-

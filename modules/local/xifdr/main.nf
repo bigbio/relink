@@ -53,5 +53,3 @@ process XIFDR {
     END_VERSIONS
     """
 }
-
-

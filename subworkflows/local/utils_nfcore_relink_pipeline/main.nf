@@ -176,5 +176,3 @@ def genomeExistsError() {
         error(error_string)
     }
 }
-
-

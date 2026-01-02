@@ -5,5 +5,3 @@ channels:
   - defaults
 dependencies:
   - openjdk>=17
-
-

@@ -87,4 +87,3 @@ jobs:
           body: |
             @${{ github.actor }} I tried to fix the linting errors, but it didn't work. Please fix them manually.
             See [CI log](https://github.com/bigbio/relink/actions/runs/${{ github.run_id }}) for more details.
-

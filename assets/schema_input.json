@@ -45,5 +45,3 @@
         "required": ["sample", "file", "fasta", "xi_linear_config", "xi_crosslink_config"]
     }
 }
-
-

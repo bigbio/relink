@@ -57,4 +57,3 @@ process MASS_RECALIBRATION {
     END_VERSIONS
     """
 }
-

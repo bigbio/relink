@@ -110,4 +110,3 @@ jobs:
           path: .nextflow.log
           overwrite: false
           if-no-files-found: warn
-

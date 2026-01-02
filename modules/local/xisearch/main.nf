@@ -58,5 +58,3 @@ process XISEARCH {
     END_VERSIONS
     """
 }
-
-

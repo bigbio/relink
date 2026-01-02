@@ -18,4 +18,3 @@ Initial development release of bigbio/relink.
 - nf-core compliant pipeline structure
 - Docker container with xiSEARCH 1.8.11, xiFDR 2.3.10, and Python dependencies
 - GitHub Actions for CI/CD and linting
-

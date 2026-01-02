@@ -46,4 +46,3 @@ body:
         * Version of bigbio/relink _(eg. 1.0.0)_
     validations:
       required: true
-

@@ -13,13 +13,13 @@ tools:
         functionality for mass spectrometry data processing.
       homepage: https://pyopenms.readthedocs.io/
       documentation: https://pyopenms.readthedocs.io/
-      licence: ['BSD-3-Clause']
+      licence: ["BSD-3-Clause"]
   - polars:
       description: |
         Polars is a lightning-fast DataFrame library for Rust and Python.
       homepage: https://pola.rs/
       documentation: https://docs.pola.rs/
-      licence: ['MIT']
+      licence: ["MIT"]
 input:
   - meta:
       type: map
@@ -67,5 +67,3 @@ authors:
   - "@jbeale2023"
 maintainers:
   - "@ypriverol"
-
-

@@ -180,4 +180,3 @@ Actions taken by the nf-core's Safety Team may include, but are not limited to:
 ### v1.0 - March 15th, 2021
 
 - Complete rewrite from original [Contributor Covenant](http://contributor-covenant.org/) CoC.
-

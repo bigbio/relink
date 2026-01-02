@@ -10,4 +10,3 @@ dependencies:
   - conda-forge::matplotlib>=3.7.0
   - conda-forge::seaborn>=0.12.0
   - conda-forge::numpy>=1.24.0
-

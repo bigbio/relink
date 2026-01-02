@@ -20,6 +20,7 @@ from pyopenms import MascotGenericFile, MSExperiment
 
 class MassError(NamedTuple):
     """Container for precursor and MS2 mass errors in ppm."""
+
     precursor_error: float
     ms2_error: float
 
@@ -52,7 +53,9 @@ def calculate_mass_error(
         .filter((pl.col("decoy") == 0) & (pl.col("match score") > minimum_match_score))
         .with_columns(pl.col("Scan").str.replace_all(",", "").cast(pl.Int64))
         .with_columns(pl.col("Run").replace("", None).cast(pl.Int64))
-        .with_columns(pl.col("Precursor Error").str.replace_all(",", "").cast(pl.Float64))
+        .with_columns(
+            pl.col("Precursor Error").str.replace_all(",", "").cast(pl.Float64)
+        )
     )
 
     # Load peaks data
@@ -75,7 +78,10 @@ def calculate_mass_error(
 
     # Check if we have enough data points
     if len(precursor_error_df) < minimum_precursor_count:
-        print(f"Warning: Only {len(precursor_error_df)} precursors found, below threshold of {minimum_precursor_count}. Skipping recalibration.", file=sys.stderr)
+        print(
+            f"Warning: Only {len(precursor_error_df)} precursors found, below threshold of {minimum_precursor_count}. Skipping recalibration.",
+            file=sys.stderr,
+        )
         return MassError(0.0, 0.0)
 
     # Calculate MS1 (precursor) error
@@ -93,8 +99,8 @@ def calculate_mass_error(
         )
         .with_columns(MS2Error_ppm=((pl.col("MS2Error") * 10.0**6) / pl.col("CalcMZ")))
         .filter(
-            (pl.col("MS2Error_ppm") <= ms2_error_bounds[0]) &
-            (pl.col("MS2Error_ppm") >= ms2_error_bounds[1])
+            (pl.col("MS2Error_ppm") <= ms2_error_bounds[0])
+            & (pl.col("MS2Error_ppm") >= ms2_error_bounds[1])
         )
         .select(pl.col("MS2Error_ppm"))
     )
@@ -125,7 +131,9 @@ def recalibrate_mgf(
         # Recalibrate precursor mass
         precursors = spectrum.getPrecursors()
         for precursor in precursors:
-            corrected_mz = precursor.getMZ() / (1 + mass_error.precursor_error / 10.0**6)
+            corrected_mz = precursor.getMZ() / (
+                1 + mass_error.precursor_error / 10.0**6
+            )
             precursor.setMZ(corrected_mz)
         spectrum.setPrecursors(precursors)
 
@@ -164,8 +172,15 @@ def generate_plots(
     if len(precursor_error_df) > 0:
         plt.figure(figsize=(10, 6))
         sns.histplot(precursor_error_df.to_pandas(), x="Precursor Error")
-        plt.axvline(precursor_error, color='red', linestyle='--', label=f'Median: {precursor_error:.2f} ppm')
-        plt.title(f"MS1 Precursor Error Distribution\nMedian: {precursor_error:.2f} ppm")
+        plt.axvline(
+            precursor_error,
+            color="red",
+            linestyle="--",
+            label=f"Median: {precursor_error:.2f} ppm",
+        )
+        plt.title(
+            f"MS1 Precursor Error Distribution\nMedian: {precursor_error:.2f} ppm"
+        )
         plt.ylabel("# of Identifications")
         plt.xlabel("Precursor Error (ppm)")
         plt.legend()
@@ -177,7 +192,9 @@ def generate_plots(
     if ms2_error_df is not None and len(ms2_error_df) > 0:
         plt.figure(figsize=(10, 6))
         sns.histplot(ms2_error_df.to_pandas(), x="MS2Error_ppm")
-        plt.axvline(ms2_error, color='red', linestyle='--', label=f'Median: {ms2_error:.2f} ppm')
+        plt.axvline(
+            ms2_error, color="red", linestyle="--", label=f"Median: {ms2_error:.2f} ppm"
+        )
         plt.title(f"MS2 Fragment Ion Error Distribution\nMedian: {ms2_error:.2f} ppm")
         plt.ylabel("# of Identifications")
         plt.xlabel("Mass Error (ppm)")
@@ -280,11 +297,13 @@ def main():
     print(f"  Fragment (MS2):  {mass_error.ms2_error:.4f} ppm")
 
     # Write error report
-    error_report = pl.DataFrame({
-        "sample": [args.prefix],
-        "precursor_error_ppm": [mass_error.precursor_error],
-        "ms2_error_ppm": [mass_error.ms2_error],
-    })
+    error_report = pl.DataFrame(
+        {
+            "sample": [args.prefix],
+            "precursor_error_ppm": [mass_error.precursor_error],
+            "ms2_error_ppm": [mass_error.ms2_error],
+        }
+    )
     error_report.write_csv(args.error_report)
     print(f"Wrote error report to {args.error_report}")
 
@@ -310,5 +329,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-

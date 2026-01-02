@@ -30,4 +30,3 @@ repos:
             nextflow_schema.json|
             assets/schema_input.json
           )$
-
