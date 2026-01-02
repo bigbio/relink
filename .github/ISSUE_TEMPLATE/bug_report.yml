@@ -1,0 +1,49 @@
+name: Bug Report
+description: File a bug report
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before you post this issue, please check the documentation and FAQ at https://github.com/bigbio/relink
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description of the bug
+      description: A clear and concise description of what the bug is.
+    validations:
+      required: true
+
+  - type: textarea
+    id: command_used
+    attributes:
+      label: Command used and terminal output
+      description: Steps to reproduce the behaviour. Please paste the command you used to launch the pipeline and the output from your terminal.
+      render: console
+    validations:
+      required: true
+
+  - type: textarea
+    id: files
+    attributes:
+      label: Relevant files
+      description: |
+        Please drag and drop the relevant files here. Create a `.zip` archive if the extension is not allowed.
+        Your samplesheet and samples are relevant if the issue is for a specific sample.
+        Your log files are relevant in most cases.
+
+  - type: textarea
+    id: system
+    attributes:
+      label: System information
+      description: |
+        * Nextflow version _(eg. 23.04.0)_
+        * Hardware _(eg. HPC, Desktop, Cloud)_
+        * Executor _(eg. local, slurm, awsbatch)_
+        * Container engine: _(eg. docker, singularity, conda)_
+        * OS _(eg. Ubuntu, CentOS)_
+        * Version of bigbio/relink _(eg. 1.0.0)_
+    validations:
+      required: true
+

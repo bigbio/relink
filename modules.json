@@ -1,0 +1,22 @@
+{
+    "name": "bigbio/relink",
+    "homePage": "https://github.com/bigbio/relink",
+    "repos": {
+        "https://github.com/bigbio/nf-modules.git": {
+            "modules": {
+                "bigbio": {
+                    "pmultiqc": {
+                        "branch": "main",
+                        "git_sha": "a1a4a11ff508b2b5c23c9fb21c51c3327b748d4d",
+                        "installed_by": ["modules"]
+                    },
+                    "thermorawfileparser": {
+                        "branch": "main",
+                        "git_sha": "a1a4a11ff508b2b5c23c9fb21c51c3327b748d4d",
+                        "installed_by": ["modules"]
+                    }
+                }
+            }
+        }
+    }
+}

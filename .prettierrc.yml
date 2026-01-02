@@ -1,0 +1,7 @@
+printWidth: 120
+tabWidth: 4
+overrides:
+  - files: "*.{md,yml,yaml,html,css,scss,js,cff}"
+    options:
+      tabWidth: 2
+

@@ -1,0 +1,5 @@
+sample,file,fasta,xi_linear_config,xi_crosslink_config
+sample1,/path/to/sample1.raw,/path/to/database.fasta,/path/to/xi_linear.conf,/path/to/xi_crosslinking.conf
+sample2,/path/to/sample2.raw,/path/to/database.fasta,/path/to/xi_linear.conf,/path/to/xi_crosslinking.conf
+
+

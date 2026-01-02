@@ -1,0 +1,61 @@
+name: xisearch
+description: Run xiSEARCH for linear or crosslinking peptide search
+keywords:
+  - proteomics
+  - crosslinking
+  - mass spectrometry
+  - peptide search
+  - xiSEARCH
+tools:
+  - xisearch:
+      description: |
+        xiSEARCH is a search engine for crosslinked peptide identification from mass spectrometry data.
+        Supports both linear peptide search (for mass recalibration) and crosslinking search modes.
+      homepage: https://www.rappsilberlab.org/software/xisearch/
+      documentation: https://github.com/Rappsilber-Laboratory/XiSearch
+      licence: ['Apache-2.0']
+input:
+  - meta:
+      type: map
+      description: |
+        Groovy Map containing sample information
+        e.g. [ id:'sample1' ]
+  - mgf_file:
+      type: file
+      description: MGF file containing MS/MS spectra
+      pattern: "*.mgf"
+  - fasta:
+      type: file
+      description: FASTA database file for peptide search
+      pattern: "*.{fasta,fa}"
+  - config:
+      type: file
+      description: xiSEARCH configuration file
+      pattern: "*.conf"
+  - mode:
+      type: string
+      description: Search mode - either 'linear' or 'crosslink'
+output:
+  - meta:
+      type: map
+      description: |
+        Groovy Map containing sample information
+  - results:
+      type: file
+      description: xiSEARCH results in CSV format
+      pattern: "*_{linear,crosslink}.csv"
+  - peaks:
+      type: file
+      description: Peak annotations from xiSEARCH
+      pattern: "*_{linear,crosslink}.peaks.{tsv,csv}"
+  - versions:
+      type: file
+      description: File containing software versions
+      pattern: "versions.yml"
+authors:
+  - "@ypriverol"
+  - "@jbeale2023"
+maintainers:
+  - "@ypriverol"
+
+

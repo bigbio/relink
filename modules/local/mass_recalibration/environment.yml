@@ -1,0 +1,13 @@
+name: mass_recalibration
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - python>=3.10
+  - bioconda::pyopenms>=3.5.0
+  - conda-forge::polars>=1.0.0
+  - conda-forge::matplotlib>=3.7.0
+  - conda-forge::seaborn>=0.12.0
+  - conda-forge::numpy>=1.24.0
+
