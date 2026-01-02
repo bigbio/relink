@@ -1,0 +1,32 @@
+name: Feature Request
+description: Suggest an idea for the bigbio/relink pipeline
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for taking the time to fill out this feature request!
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description of the feature
+      description: Please describe the feature request and the goal that would be achieved.
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Is your feature request related to a problem? Please describe.
+    validations:
+      required: false
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: If you have a suggested solution or implementation, please describe it here.
+    validations:
+      required: false

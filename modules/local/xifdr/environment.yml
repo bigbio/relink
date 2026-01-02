@@ -1,0 +1,7 @@
+name: xifdr
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - openjdk>=17

@@ -1,0 +1,47 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "https://raw.githubusercontent.com/bigbio/relink/master/assets/schema_input.json",
+    "title": "bigbio/relink pipeline - params.input schema",
+    "description": "Schema for the file provided with params.input",
+    "type": "array",
+    "items": {
+        "type": "object",
+        "properties": {
+            "sample": {
+                "type": "string",
+                "pattern": "^\\S+$",
+                "errorMessage": "Sample name must be provided and cannot contain spaces",
+                "meta": ["id"]
+            },
+            "file": {
+                "type": "string",
+                "format": "file-path",
+                "exists": true,
+                "pattern": "^\\S+\\.(raw|RAW|mgf|MGF)$",
+                "errorMessage": "Mass spectrometry data file must be provided (RAW or MGF format)"
+            },
+            "fasta": {
+                "type": "string",
+                "format": "file-path",
+                "exists": true,
+                "pattern": "^\\S+\\.(fasta|fa|FASTA|FA)$",
+                "errorMessage": "FASTA database file must be provided"
+            },
+            "xi_linear_config": {
+                "type": "string",
+                "format": "file-path",
+                "exists": true,
+                "pattern": "^\\S+\\.conf$",
+                "errorMessage": "xiSEARCH linear configuration file must be provided"
+            },
+            "xi_crosslink_config": {
+                "type": "string",
+                "format": "file-path",
+                "exists": true,
+                "pattern": "^\\S+\\.conf$",
+                "errorMessage": "xiSEARCH crosslinking configuration file must be provided"
+            }
+        },
+        "required": ["sample", "file", "fasta", "xi_linear_config", "xi_crosslink_config"]
+    }
+}
