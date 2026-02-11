@@ -4,6 +4,15 @@
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    IMPORT FUNCTIONS / MODULES / SUBWORKFLOWS
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     SUBWORKFLOW DEFINITION
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
@@ -75,9 +84,12 @@ def dumpParametersToJSON(outdir) {
     def jsonStr    = groovy.json.JsonOutput.toJson(params)
     temp_pf.text   = groovy.json.JsonOutput.prettyPrint(jsonStr)
 
-    nextflow.io.file.FileHelper.moveTo(
+    def target = file("${outdir}/pipeline_info/${filename}")
+
+    Files.move(
         temp_pf.toPath(),
-        nextflow.io.file.FileHelper.toPath("${outdir}/pipeline_info/${filename}")
+        target,
+        StandardCopyOption.REPLACE_EXISTING
     )
 }
 
