@@ -1,0 +1,34 @@
+name: intensity_format_correction
+description: Corrects xiSEARCH errors when recognizing numbers in scientific notation
+keywords:
+  - proteomics
+  - mass spectrometry
+  - MGF
+input:
+  - meta:
+      type: map
+      description: |
+        Groovy Map containing sample information
+        e.g. [ id:'sample1' ]
+  - mgf_file:
+      type: file
+      description: Original MGF file to be reformatted
+      pattern: "*.mgf"
+output:
+  - meta:
+      type: map
+      description: |
+        Groovy Map containing sample information
+  - mgf:
+      type: file
+      description: Reformatted MGF file
+      pattern: "reformatted_*.mgf"
+  - versions:
+      type: file
+      description: File containing software versions
+      pattern: "versions.yml"
+authors:
+  - "@ypriverol"
+  - "@jbeale2023"
+maintainers:
+  - "@ypriverol"

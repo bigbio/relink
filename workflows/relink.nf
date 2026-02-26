@@ -8,6 +8,7 @@ include { THERMORAWFILEPARSER           } from '../modules/bigbio/thermorawfilep
 include { XISEARCH as XISEARCH_LINEAR   } from '../modules/local/xisearch/main'
 include { XISEARCH as XISEARCH_CROSSLINK } from '../modules/local/xisearch/main'
 include { MASS_RECALIBRATION            } from '../modules/local/mass_recalibration/main'
+include { FORMAT_CORRECTION } from '../modules/local/intensity_reformat/main'
 include { XIFDR                         } from '../modules/local/xifdr/main'
 include { PMULTIQC                      } from '../modules/bigbio/pmultiqc/main'
 include { paramsSummaryMap              } from 'plugin/nf-validation'
@@ -104,9 +105,17 @@ workflow RELINK {
     } else {
         ch_mgf_for_crosslink = ch_mgf
     }
+    // =========================================================================
+    // STEP 4: MGF Format Correction
+    // =========================================================================
+    FORMAT_CORRECTION (
+        ch_mgf_for_crosslink
+    )
+    ch_versions = ch_versions.mix(FORMAT_CORRECTION.out.versions.first())
+    ch_reformatted_mgf_for_crosslink = FORMAT_CORRECTION.out.mgf
 
     // =========================================================================
-    // STEP 4: Crosslinking Search
+    // STEP 5: Crosslinking Search
     // =========================================================================
 
     if (params.do_crosslinking_search) {
@@ -115,7 +124,7 @@ workflow RELINK {
         // MODULE: Run xiSEARCH crosslinking search
         //
         XISEARCH_CROSSLINK (
-            ch_mgf_for_crosslink,
+            ch_reformatted_mgf_for_crosslink,
             ch_fasta,
             ch_crosslink_config,
             'crosslink'
@@ -125,7 +134,7 @@ workflow RELINK {
         ch_crosslink_results = XISEARCH_CROSSLINK.out.results
 
         // =====================================================================
-        // STEP 5: FDR Correction
+        // STEP 6: FDR Correction
         // =====================================================================
 
         if (params.do_fdr) {
@@ -144,7 +153,7 @@ workflow RELINK {
     }
 
     // =========================================================================
-    // STEP 6: Reporting
+    // STEP 7: Reporting
     // =========================================================================
 
     //

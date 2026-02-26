@@ -14,7 +14,7 @@ process XIFDR {
     val link_fdr
 
     output:
-    path "fdr_*.csv", emit: results
+    path "FDR_*.csv", emit: results
     path "versions.yml", emit: versions
 
     when:
@@ -30,8 +30,7 @@ process XIFDR {
         --xiconfig='${config}' \\
         --linkfdr=${link_fdr} \\
         --xiversion=1.8.11 \\
-        --csvOutDir=./ \\
-        --csvOutBaseName=fdr_ \\
+        --csvOutDir=. \\
         ${args} \\
         ${input_files}
 
@@ -44,7 +43,7 @@ process XIFDR {
 
     stub:
     """
-    touch 'fdr_results.csv'
+    touch 'FDR_results.csv'
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

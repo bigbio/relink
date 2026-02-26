@@ -27,7 +27,7 @@ workflow UTILS_NFCORE_PIPELINE {
     schema_filename
 
     main:
-    def valid_config = true
+        valid_config = Channel.value(true)
 
     //
     // Print help message if required
@@ -112,7 +112,7 @@ def softwareVersionsToYAML(ch_versions) {
         .unique()
         .map { processVersions(it) }
         .unique()
-        .map { yaml -> yaml.trim() }
+        .map { yaml -> yaml.normalize() }
         .collectFile(name: 'versions.yml', newLine: true, sort: true)
 }
 
