@@ -8,7 +8,6 @@ include { THERMORAWFILEPARSER           } from '../modules/bigbio/thermorawfilep
 include { XISEARCH as XISEARCH_LINEAR   } from '../modules/local/xisearch/main'
 include { XISEARCH as XISEARCH_CROSSLINK } from '../modules/local/xisearch/main'
 include { MASS_RECALIBRATION            } from '../modules/local/mass_recalibration/main'
-include { FORMAT_CORRECTION } from '../modules/local/intensity_reformat/main'
 include { XIFDR                         } from '../modules/local/xifdr/main'
 include { PMULTIQC                      } from '../modules/bigbio/pmultiqc/main'
 include { paramsSummaryMap              } from 'plugin/nf-validation'
@@ -40,7 +39,7 @@ workflow RELINK {
         }
         .branch {
             raw: it[1].name.toLowerCase().endsWith('.raw')
-            mgf: it[1].name.toLowerCase().endsWith('.mgf')
+            mzml: it[1].name.toLowerCase().endsWith('.mzml')
         }
         .set { ch_input_by_type }
 
@@ -50,20 +49,20 @@ workflow RELINK {
     ch_crosslink_config = ch_samplesheet.map { meta, file, fasta, linear_config, crosslink_config -> crosslink_config }.first()
 
     // =========================================================================
-    // STEP 1: File Conversion (RAW → MGF)
+    // STEP 1: File Conversion (RAW → mzML)
     // =========================================================================
 
     //
-    // MODULE: Convert RAW files to MGF format
+    // MODULE: Convert RAW files to mzML format
     //
     THERMORAWFILEPARSER (
         ch_input_by_type.raw
     )
     ch_versions = ch_versions.mix(THERMORAWFILEPARSER.out.versions.first())
 
-    // Combine converted MGF with input MGF files
-    ch_mgf = THERMORAWFILEPARSER.out.convert_files
-        .mix(ch_input_by_type.mgf)
+    // Combine converted mzML with input mzML files
+    ch_mzml = THERMORAWFILEPARSER.out.convert_files
+        .mix(ch_input_by_type.mzml)
 
     // =========================================================================
     // STEP 2: Linear Search (for mass recalibration)
@@ -75,7 +74,7 @@ workflow RELINK {
         // MODULE: Run xiSEARCH linear search
         //
         XISEARCH_LINEAR (
-            ch_mgf,
+            ch_mzml,
             ch_fasta,
             ch_linear_config,
             'linear'
@@ -86,13 +85,13 @@ workflow RELINK {
         // STEP 3: Mass Recalibration
         // =====================================================================
 
-        // Prepare input for recalibration: join linear results with original MGF
+        // Prepare input for recalibration: join linear results with original mzML
         ch_for_recal = XISEARCH_LINEAR.out.results
             .join(XISEARCH_LINEAR.out.peaks)
-            .join(ch_mgf)
+            .join(ch_mzml)
 
         //
-        // MODULE: Calculate mass error and recalibrate MGF files
+        // MODULE: Calculate mass error and recalibrate spectra files
         //
         MASS_RECALIBRATION (
             ch_for_recal,
@@ -100,22 +99,14 @@ workflow RELINK {
         )
         ch_versions = ch_versions.mix(MASS_RECALIBRATION.out.versions.first())
 
-        ch_mgf_for_crosslink = MASS_RECALIBRATION.out.mgf
+        ch_mzml_for_crosslink = MASS_RECALIBRATION.out.mzml
 
     } else {
-        ch_mgf_for_crosslink = ch_mgf
+        ch_mzml_for_crosslink = ch_mzml
     }
-    // =========================================================================
-    // STEP 4: MGF Format Correction
-    // =========================================================================
-    FORMAT_CORRECTION (
-        ch_mgf_for_crosslink
-    )
-    ch_versions = ch_versions.mix(FORMAT_CORRECTION.out.versions.first())
-    ch_reformatted_mgf_for_crosslink = FORMAT_CORRECTION.out.mgf
 
     // =========================================================================
-    // STEP 5: Crosslinking Search
+    // STEP 4: Crosslinking Search
     // =========================================================================
 
     if (params.do_crosslinking_search) {
@@ -124,7 +115,7 @@ workflow RELINK {
         // MODULE: Run xiSEARCH crosslinking search
         //
         XISEARCH_CROSSLINK (
-            ch_reformatted_mgf_for_crosslink,
+            ch_mzml_for_crosslink,
             ch_fasta,
             ch_crosslink_config,
             'crosslink'
@@ -134,7 +125,7 @@ workflow RELINK {
         ch_crosslink_results = XISEARCH_CROSSLINK.out.results
 
         // =====================================================================
-        // STEP 6: FDR Correction
+        // STEP 5: FDR Correction
         // =====================================================================
 
         if (params.do_fdr) {
@@ -153,7 +144,7 @@ workflow RELINK {
     }
 
     // =========================================================================
-    // STEP 7: Reporting
+    // STEP 6: Reporting
     // =========================================================================
 
     //
