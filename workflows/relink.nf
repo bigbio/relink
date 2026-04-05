@@ -9,6 +9,9 @@ include { XISEARCH as XISEARCH_LINEAR   } from '../modules/local/xisearch/main'
 include { XISEARCH as XISEARCH_CROSSLINK } from '../modules/local/xisearch/main'
 include { MASS_RECALIBRATION            } from '../modules/local/mass_recalibration/main'
 include { XIFDR                         } from '../modules/local/xifdr/main'
+include { SCOUT_SEARCH                  } from '../modules/local/scout_search/main'
+include { SCOUT_FILTER                  } from '../modules/local/scout_filter/main'
+include { MZIDENTML_EXPORT              } from '../modules/local/mzidentml_export/main'
 include { PMULTIQC                      } from '../modules/bigbio/pmultiqc/main'
 include { paramsSummaryMap              } from 'plugin/nf-validation'
 include { paramsSummaryMultiqc          } from '../subworkflows/nf-core/utils_nfcore_pipeline'
@@ -65,86 +68,151 @@ workflow RELINK {
         .mix(ch_input_by_type.mzml)
 
     // =========================================================================
-    // STEP 2: Linear Search (for mass recalibration)
+    // STEP 2: Search Engine Branch
     // =========================================================================
 
-    if (params.do_recalibration) {
+    if (params.search_engine == 'xisearch') {
+
+        // =================================================================
+        // xiSEARCH path
+        // =================================================================
+
+        // -----------------------------------------------------------------
+        // Linear Search (for mass recalibration)
+        // -----------------------------------------------------------------
+
+        if (params.do_recalibration) {
+
+            //
+            // MODULE: Run xiSEARCH linear search
+            //
+            XISEARCH_LINEAR (
+                ch_mzml,
+                ch_fasta,
+                ch_linear_config,
+                'linear'
+            )
+            ch_versions = ch_versions.mix(XISEARCH_LINEAR.out.versions.first())
+
+            // Prepare input for recalibration: join linear results with original mzML
+            ch_for_recal = XISEARCH_LINEAR.out.results
+                .join(XISEARCH_LINEAR.out.peaks)
+                .join(ch_mzml)
+
+            //
+            // MODULE: Calculate mass error and recalibrate spectra files
+            //
+            MASS_RECALIBRATION (
+                ch_for_recal,
+                params.do_mass_error_plots
+            )
+            ch_versions = ch_versions.mix(MASS_RECALIBRATION.out.versions.first())
+
+            ch_mzml_for_crosslink = MASS_RECALIBRATION.out.mzml
+
+        } else {
+            ch_mzml_for_crosslink = ch_mzml
+        }
+
+        // -----------------------------------------------------------------
+        // Crosslinking Search
+        // -----------------------------------------------------------------
+
+        if (params.do_crosslinking_search) {
+
+            //
+            // MODULE: Run xiSEARCH crosslinking search
+            //
+            XISEARCH_CROSSLINK (
+                ch_mzml_for_crosslink,
+                ch_fasta,
+                ch_crosslink_config,
+                'crosslink'
+            )
+            ch_versions = ch_versions.mix(XISEARCH_CROSSLINK.out.versions.first())
+
+            ch_crosslink_results = XISEARCH_CROSSLINK.out.results
+
+            // ---------------------------------------------------------
+            // FDR Correction
+            // ---------------------------------------------------------
+
+            if (params.do_fdr) {
+
+                //
+                // MODULE: Run xiFDR for FDR correction
+                //
+                XIFDR (
+                    ch_crosslink_results.map { meta, csv -> csv }.collect(),
+                    ch_fasta,
+                    ch_crosslink_config,
+                    params.link_fdr
+                )
+                ch_versions = ch_versions.mix(XIFDR.out.versions.first())
+
+                ch_fdr_results = XIFDR.out.results
+            }
+        }
+
+    } else if (params.search_engine == 'scout') {
+
+        // =================================================================
+        // Scout path
+        // =================================================================
+
+        ch_search_config = params.custom_search_config
+            ? Channel.fromPath(params.custom_search_config)
+            : ch_crosslink_config
 
         //
-        // MODULE: Run xiSEARCH linear search
+        // MODULE: Run Scout crosslink search
         //
-        XISEARCH_LINEAR (
+        SCOUT_SEARCH (
             ch_mzml,
-            ch_fasta,
-            ch_linear_config,
-            'linear'
-        )
-        ch_versions = ch_versions.mix(XISEARCH_LINEAR.out.versions.first())
-
-        // =====================================================================
-        // STEP 3: Mass Recalibration
-        // =====================================================================
-
-        // Prepare input for recalibration: join linear results with original mzML
-        ch_for_recal = XISEARCH_LINEAR.out.results
-            .join(XISEARCH_LINEAR.out.peaks)
-            .join(ch_mzml)
-
-        //
-        // MODULE: Calculate mass error and recalibrate spectra files
-        //
-        MASS_RECALIBRATION (
-            ch_for_recal,
-            params.do_mass_error_plots
-        )
-        ch_versions = ch_versions.mix(MASS_RECALIBRATION.out.versions.first())
-
-        ch_mzml_for_crosslink = MASS_RECALIBRATION.out.mzml
-
-    } else {
-        ch_mzml_for_crosslink = ch_mzml
-    }
-
-    // =========================================================================
-    // STEP 4: Crosslinking Search
-    // =========================================================================
-
-    if (params.do_crosslinking_search) {
-
-        //
-        // MODULE: Run xiSEARCH crosslinking search
-        //
-        XISEARCH_CROSSLINK (
-            ch_mzml_for_crosslink,
-            ch_fasta,
+            ch_search_config,
             ch_crosslink_config,
-            'crosslink'
+            ch_fasta
         )
-        ch_versions = ch_versions.mix(XISEARCH_CROSSLINK.out.versions.first())
+        ch_versions = ch_versions.mix(SCOUT_SEARCH.out.versions.first())
 
-        ch_crosslink_results = XISEARCH_CROSSLINK.out.results
-
-        // =====================================================================
-        // STEP 5: FDR Correction
-        // =====================================================================
+        // -----------------------------------------------------------------
+        // Scout FDR filtering
+        // -----------------------------------------------------------------
 
         if (params.do_fdr) {
 
             //
-            // MODULE: Run xiFDR for FDR correction
+            // MODULE: Run Scout FDR filtering
             //
-            XIFDR (
-                ch_crosslink_results.map { meta, csv -> csv }.collect(),
-                ch_fasta,
+            SCOUT_FILTER (
+                SCOUT_SEARCH.out.buf_files.map { meta, buf -> buf }.collect(),
                 ch_crosslink_config,
-                params.link_fdr
+                ch_fasta
             )
-            ch_versions = ch_versions.mix(XIFDR.out.versions.first())
+            ch_versions = ch_versions.mix(SCOUT_FILTER.out.versions.first())
+
+            ch_fdr_results = SCOUT_FILTER.out.results
         }
+
+    } else {
+        error "Unknown search_engine: '${params.search_engine}'. Supported values: 'xisearch', 'scout'."
     }
 
     // =========================================================================
-    // STEP 6: Reporting
+    // STEP 3: mzIdentML Export
+    // =========================================================================
+
+    if (params.do_fdr) {
+        MZIDENTML_EXPORT (
+            ch_fdr_results,
+            ch_fasta,
+            params.search_engine
+        )
+        ch_versions = ch_versions.mix(MZIDENTML_EXPORT.out.versions.first())
+    }
+
+    // =========================================================================
+    // STEP 4: Reporting
     // =========================================================================
 
     //
