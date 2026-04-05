@@ -9,7 +9,7 @@ process XISEARCH {
         'ghcr.io/bigbio/relink:1.0.0' }"
 
     input:
-    tuple val(meta), path(mgf_file)
+    tuple val(meta), path(spectra_file)
     path fasta
     path config
     val mode  // 'linear' or 'crosslink'
@@ -31,7 +31,7 @@ process XISEARCH {
     java -Xmx${mem}g -jar /opt/xisearch/xiSEARCH.jar \\
         --fasta='${fasta}' \\
         --xiconf=UseCPUs:${task.cpus} \\
-        --peaks='${mgf_file}' \\
+        --peaks='${spectra_file}' \\
         --config='${config}' \\
         --output='${prefix}_${mode}.csv' \\
         --peaksout='${prefix}_${mode}.peaks.${peaks_ext}' \\
