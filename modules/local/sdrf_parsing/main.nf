@@ -6,17 +6,22 @@ process SDRF_PARSING {
 
     input:
     path sdrf
+    val search_engine
 
     output:
-    path "relink_config.tsv", emit: config
-    path "versions.yml",      emit: versions
+    path "relink_design.tsv", emit: design
+    path "xi_linear.conf",    emit: xi_linear_config, optional: true
+    path "xi_crosslinking.conf", emit: xi_crosslink_config, optional: true
+    path "search_params.json", emit: scout_search_params, optional: true
+    path "filter_params.json", emit: scout_filter_params, optional: true
+    path "versions.yml",       emit: versions
 
     when:
     task.ext.when == null || task.ext.when
 
     script:
     """
-    parse_sdrf convert-relink -s ${sdrf} -o relink_config.tsv
+    parse_sdrf convert-relink -s ${sdrf} -e ${search_engine}
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
@@ -26,7 +31,9 @@ process SDRF_PARSING {
 
     stub:
     """
-    touch relink_config.tsv
+    touch relink_design.tsv
+    touch xi_linear.conf
+    touch xi_crosslinking.conf
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
