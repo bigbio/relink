@@ -8,7 +8,7 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-include { paramsSummaryLog; paramsSummaryMap; fromSamplesheet  } from 'plugin/nf-validation'
+include { paramsSummaryLog; paramsSummaryMap  } from 'plugin/nf-validation'
 include { UTILS_NFCORE_PIPELINE     } from '../../nf-core/utils_nfcore_pipeline'
 include { completionEmail           } from '../../nf-core/utils_nfcore_pipeline'
 include { completionSummary         } from '../../nf-core/utils_nfcore_pipeline'
@@ -16,6 +16,7 @@ include { dashedLine                } from '../../nf-core/utils_nfcore_pipeline'
 include { nfCoreLogo                } from '../../nf-core/utils_nfcore_pipeline'
 include { imNotification            } from '../../nf-core/utils_nfcore_pipeline'
 include { UTILS_NEXTFLOW_PIPELINE   } from '../../nf-core/utils_nextflow_pipeline'
+include { SDRF_PARSING              } from '../../../modules/local/sdrf_parsing/main'
 
 /*
 ========================================================================================
@@ -52,7 +53,7 @@ workflow PIPELINE_INITIALISATION {
     //
     pre_help_text = nfCoreLogo(monochrome_logs)
     post_help_text = '\n' + dashedLine(monochrome_logs)
-    def String workflow_command = "nextflow run ${workflow.manifest.name} -profile <docker/singularity/.../institute> --input samplesheet.csv --outdir <OUTDIR>"
+    def String workflow_command = "nextflow run ${workflow.manifest.name} -profile <docker/singularity/.../institute> --input sdrf.tsv --fasta database.fasta --outdir <OUTDIR>"
     UTILS_NFCORE_PIPELINE (
         help,
         workflow_command,
@@ -69,19 +70,85 @@ workflow PIPELINE_INITIALISATION {
         .set { valid_config }
 
     //
-    // Create channel from input file provided through params.input
+    // Validate required parameters
     //
-    Channel
-        .fromSamplesheet("input")
-        .map {
-            meta, file, fasta, xi_linear_config, xi_crosslink_config ->
-                return [ meta, file, fasta, xi_linear_config, xi_crosslink_config ]
+    if (!params.input) {
+        error("Please provide an SDRF file to the pipeline e.g. '--input sdrf.tsv'")
+    }
+    if (!params.fasta) {
+        error("Please provide a FASTA database e.g. '--fasta database.fasta'")
+    }
+
+    //
+    // MODULE: Parse SDRF to generate design TSV and engine-specific configs
+    //
+    ch_sdrf = Channel.fromPath(params.input, checkIfExists: true)
+
+    SDRF_PARSING (
+        ch_sdrf,
+        params.search_engine
+    )
+    ch_versions = ch_versions.mix(SDRF_PARSING.out.versions)
+
+    //
+    // Build per-file channel from relink_design.tsv
+    // Columns: filename, sample_id, fraction, technical_replicate, uri
+    //
+    SDRF_PARSING.out.design
+        .splitCsv(header: true, sep: '\t')
+        .map { row ->
+            def filename = row.filename
+            def sample_id = row.sample_id ?: filename.take(filename.lastIndexOf('.'))
+
+            // Resolve file path: root_folder + filename, or URI from SDRF
+            def filestr
+            if (params.root_folder) {
+                filestr = "${params.root_folder}/${filename}"
+            } else if (row.uri) {
+                filestr = row.uri
+            } else {
+                error("No root_folder provided and no URI found in SDRF for file: ${filename}")
+            }
+
+            def meta = [id: sample_id]
+            return [ meta, file(filestr) ]
         }
-        .set { ch_samplesheet }
+        .set { ch_files }
+
+    //
+    // Resolve engine configs: use param overrides if provided, otherwise SDRF-generated
+    //
+    if (params.search_engine == 'xisearch') {
+        ch_linear_config = params.xi_linear_config
+            ? Channel.fromPath(params.xi_linear_config, checkIfExists: true)
+            : SDRF_PARSING.out.xi_linear_config
+        ch_crosslink_config = params.xi_crosslink_config
+            ? Channel.fromPath(params.xi_crosslink_config, checkIfExists: true)
+            : SDRF_PARSING.out.xi_crosslink_config
+    } else {
+        ch_linear_config = Channel.empty()
+        ch_crosslink_config = Channel.empty()
+    }
+
+    if (params.search_engine == 'scout') {
+        ch_scout_search_params = params.scout_search_params
+            ? Channel.fromPath(params.scout_search_params, checkIfExists: true)
+            : SDRF_PARSING.out.scout_search_params
+        ch_scout_filter_params = params.scout_filter_params
+            ? Channel.fromPath(params.scout_filter_params, checkIfExists: true)
+            : SDRF_PARSING.out.scout_filter_params
+    } else {
+        ch_scout_search_params = Channel.empty()
+        ch_scout_filter_params = Channel.empty()
+    }
 
     emit:
-    samplesheet = ch_samplesheet
-    versions    = ch_versions
+    ch_files             = ch_files              // channel: [ val(meta), path(file) ]
+    ch_linear_config     = ch_linear_config      // channel: path(xi_linear.conf)
+    ch_crosslink_config  = ch_crosslink_config   // channel: path(xi_crosslinking.conf)
+    ch_scout_search_params = ch_scout_search_params // channel: path(search_params.json)
+    ch_scout_filter_params = ch_scout_filter_params // channel: path(filter_params.json)
+    versions             = ch_versions           // channel: [ path(versions.yml) ]
 }
 
 /*
@@ -122,57 +189,5 @@ workflow PIPELINE_COMPLETION {
 
     workflow.onError {
         log.error "Pipeline failed. Please refer to troubleshooting docs: https://nf-co.re/docs/usage/troubleshooting"
-    }
-}
-
-/*
-========================================================================================
-    FUNCTIONS
-========================================================================================
-*/
-//
-// Check and validate pipeline parameters
-//
-def validateInputParameters() {
-    // Check input has been provided
-    if (!params.input) {
-        error("Please provide an input samplesheet to the pipeline e.g. '--input samplesheet.csv'")
-    }
-
-    // Check FASTA or per-sample FASTA is provided
-    // (validation handled by samplesheet schema)
-}
-
-//
-// Validate channels from input samplesheet
-//
-def validateInputSamplesheet(input) {
-    // Currently no additional validation needed beyond schema
-    return input
-}
-
-//
-// Get attribute from genome config file e.g. fasta
-//
-def getGenomeAttribute(attribute) {
-    if (params.genomes && params.genome && params.genomes.containsKey(params.genome)) {
-        if (params.genomes[ params.genome ].containsKey(attribute)) {
-            return params.genomes[ params.genome ][ attribute ]
-        }
-    }
-    return null
-}
-
-//
-// Exit pipeline if incorrect --genome key provided
-//
-def genomeExistsError() {
-    if (params.genomes && params.genome && !params.genomes.containsKey(params.genome)) {
-        def error_string = "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-            "  Genome '${params.genome}' not found in any config files provided to the pipeline.\n" +
-            "  Currently, the available genome keys are:\n" +
-            "  ${params.genomes.keySet().join(", ")}\n" +
-            "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-        error(error_string)
     }
 }

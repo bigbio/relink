@@ -23,9 +23,22 @@ process SCOUT_SEARCH {
 
     script:
     def args = task.ext.args ?: ''
+    def scout_cmd = task.ext.scout_cmd ?: '/opt/scout/run_scout.sh'
     """
-    /opt/scout/run_scout.sh -search -no_filter \\
-        ${search_params} ${filter_params} \\
+    # Inject actual file paths into search_params.json
+    python3 -c "
+import json
+with open('${search_params}') as f:
+    p = json.load(f)
+p['FastaFile'] = '${fasta}'
+p['RawPath'] = '.'
+p['OutputFolder'] = '.'
+with open('patched_search_params.json', 'w') as f:
+    json.dump(p, f, indent=2)
+"
+
+    ${scout_cmd} -search -no_filter \\
+        patched_search_params.json ${filter_params} \\
         ${args}
 
     cat <<-END_VERSIONS > versions.yml

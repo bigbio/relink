@@ -25,7 +25,7 @@ process MASS_RECALIBRATION {
     def prefix = task.ext.prefix ?: "${meta.id}"
     def plot_flag = do_plotting ? "--plot" : ""
     """
-    python ${projectDir}/bin/recalibrate_mgf.py \\
+    python ${projectDir}/bin/recalibrate_spectra.py \\
         --linear-results '${linear_results}' \\
         --peaks '${peaks_file}' \\
         --spectra '${spectra_file}' \\

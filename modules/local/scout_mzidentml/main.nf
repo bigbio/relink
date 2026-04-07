@@ -1,5 +1,5 @@
-process MZIDENTML_EXPORT {
-    tag "mzidentml_export"
+process SCOUT_MZIDENTML {
+    tag "scout_mzidentml"
     label 'process_medium'
 
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
@@ -7,11 +7,12 @@ process MZIDENTML_EXPORT {
         'ghcr.io/bigbio/relink:1.1.0' }"
 
     input:
-    path fdr_results
-    path fasta
+    path scout_file
+    path spectra_files
 
     output:
-    path "*.mzid", emit: mzidentml
+    path "*.mzid",     emit: mzidentml
+    path "*-specID.ms2", optional: true, emit: specid
     path "versions.yml", emit: versions
 
     when:
@@ -19,16 +20,24 @@ process MZIDENTML_EXPORT {
 
     script:
     def args = task.ext.args ?: ''
+    def version = task.ext.mzidentml_version ?: '1.3'
+    def scout_cmd = task.ext.scout_cmd ?: '/opt/scout/run_scout.sh'
     """
-    xi-mzidentml-converter \\
-        --csv ${fdr_results} \\
-        --fasta ${fasta} \\
-        --output results.mzid \\
+    mkdir -p raws
+    for f in *.mzML *.mzml; do
+        [ -e "\$f" ] && ln -s "\$(pwd)/\$f" raws/
+    done
+
+    ${scout_cmd} -mzid \\
+        -v ${version} \\
+        -i ${scout_file} \\
+        -raws raws/ \\
+        -o results.mzid \\
         ${args}
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        xi-mzidentml-converter: \$(pip show xi-mzidentml-converter 2>/dev/null | grep Version | cut -d' ' -f2 || echo 'unknown')
+        scout: 2.1
     END_VERSIONS
     """
 
@@ -38,7 +47,7 @@ process MZIDENTML_EXPORT {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        mzidentml_export: stub
+        scout: 2.1
     END_VERSIONS
     """
 }

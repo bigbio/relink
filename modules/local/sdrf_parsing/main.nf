@@ -2,7 +2,9 @@ process SDRF_PARSING {
     tag "sdrf_parsing"
     label 'process_single'
 
-    container 'biocontainers/sdrf-pipelines:0.1.2--pyhdfd78af_0'
+    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+        'oras://ghcr.io/bigbio/relink-sif:1.1.0' :
+        'ghcr.io/bigbio/relink:1.1.0' }"
 
     input:
     path sdrf
@@ -31,9 +33,12 @@ process SDRF_PARSING {
 
     stub:
     """
-    touch relink_design.tsv
+    printf 'filename\tsample_id\tfraction\ttechnical_replicate\turi\n' > relink_design.tsv
+    printf 'stub_sample.raw\tstub_sample\t1\t1\tstub_sample.raw\n' >> relink_design.tsv
     touch xi_linear.conf
     touch xi_crosslinking.conf
+    touch search_params.json
+    touch filter_params.json
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

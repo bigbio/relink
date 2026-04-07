@@ -24,8 +24,9 @@ process XIFDR {
     def args = task.ext.args ?: ''
     def mem = task.memory.toGiga()
     def input_files = crosslink_results.collect { "'${it}'" }.join(' ')
+    def xifdr_jar = task.ext.xifdr_jar ?: '/opt/xisearch/xiFDR.jar'
     """
-    java -Xmx${mem}g -jar /opt/xisearch/xiFDR.jar \\
+    java -Xmx${mem}g -jar ${xifdr_jar} \\
         --fasta='${fasta}' \\
         --xiconfig='${config}' \\
         --linkfdr=${link_fdr} \\

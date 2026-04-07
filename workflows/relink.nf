@@ -11,6 +11,7 @@ include { MASS_RECALIBRATION            } from '../modules/local/mass_recalibrat
 include { XIFDR                         } from '../modules/local/xifdr/main'
 include { SCOUT_SEARCH                  } from '../modules/local/scout_search/main'
 include { SCOUT_FILTER                  } from '../modules/local/scout_filter/main'
+include { SCOUT_MZIDENTML               } from '../modules/local/scout_mzidentml/main'
 include { MZIDENTML_EXPORT              } from '../modules/local/mzidentml_export/main'
 include { PMULTIQC                      } from '../modules/bigbio/pmultiqc/main'
 include { paramsSummaryMap              } from 'plugin/nf-validation'
@@ -26,7 +27,11 @@ include { softwareVersionsToYAML        } from '../subworkflows/nf-core/utils_nf
 workflow RELINK {
 
     take:
-    ch_samplesheet // channel: [ val(meta), path(file), path(fasta), path(linear_config), path(crosslink_config) ]
+    ch_files               // channel: [ val(meta), path(file) ]
+    ch_linear_config       // channel: path(xi_linear.conf)
+    ch_crosslink_config    // channel: path(xi_crosslinking.conf)
+    ch_scout_search_params // channel: path(search_params.json)
+    ch_scout_filter_params // channel: path(filter_params.json)
 
     main:
 
@@ -34,22 +39,19 @@ workflow RELINK {
     ch_multiqc_files = Channel.empty()
 
     //
-    // Prepare input channels
+    // Resolve FASTA from params
     //
-    ch_samplesheet
-        .map { meta, file, fasta, linear_config, crosslink_config ->
-            [ meta, file ]
-        }
+    ch_fasta = Channel.fromPath(params.fasta, checkIfExists: true).first()
+
+    //
+    // Branch input files by type: RAW files need conversion, mzML pass through
+    //
+    ch_files
         .branch {
             raw: it[1].name.toLowerCase().endsWith('.raw')
             mzml: it[1].name.toLowerCase().endsWith('.mzml')
         }
         .set { ch_input_by_type }
-
-    // Get FASTA and configs from first row (assumed same for all samples)
-    ch_fasta = ch_samplesheet.map { meta, file, fasta, linear_config, crosslink_config -> fasta }.first()
-    ch_linear_config = ch_samplesheet.map { meta, file, fasta, linear_config, crosslink_config -> linear_config }.first()
-    ch_crosslink_config = ch_samplesheet.map { meta, file, fasta, linear_config, crosslink_config -> crosslink_config }.first()
 
     // =========================================================================
     // STEP 1: File Conversion (RAW → mzML)
@@ -77,6 +79,10 @@ workflow RELINK {
         // xiSEARCH path
         // =================================================================
 
+        // Collect configs (single value channels)
+        ch_xi_linear = ch_linear_config.first()
+        ch_xi_crosslink = ch_crosslink_config.first()
+
         // -----------------------------------------------------------------
         // Linear Search (for mass recalibration)
         // -----------------------------------------------------------------
@@ -89,7 +95,7 @@ workflow RELINK {
             XISEARCH_LINEAR (
                 ch_mzml,
                 ch_fasta,
-                ch_linear_config,
+                ch_xi_linear,
                 'linear'
             )
             ch_versions = ch_versions.mix(XISEARCH_LINEAR.out.versions.first())
@@ -126,7 +132,7 @@ workflow RELINK {
             XISEARCH_CROSSLINK (
                 ch_mzml_for_crosslink,
                 ch_fasta,
-                ch_crosslink_config,
+                ch_xi_crosslink,
                 'crosslink'
             )
             ch_versions = ch_versions.mix(XISEARCH_CROSSLINK.out.versions.first())
@@ -145,12 +151,19 @@ workflow RELINK {
                 XIFDR (
                     ch_crosslink_results.map { meta, csv -> csv }.collect(),
                     ch_fasta,
-                    ch_crosslink_config,
+                    ch_xi_crosslink,
                     params.link_fdr
                 )
                 ch_versions = ch_versions.mix(XIFDR.out.versions.first())
 
-                ch_fdr_results = XIFDR.out.results
+                //
+                // MODULE: Export xiFDR results to mzIdentML
+                //
+                MZIDENTML_EXPORT (
+                    XIFDR.out.results,
+                    ch_fasta
+                )
+                ch_versions = ch_versions.mix(MZIDENTML_EXPORT.out.versions.first())
             }
         }
 
@@ -160,23 +173,22 @@ workflow RELINK {
         // Scout path
         // =================================================================
 
-        ch_search_config = params.custom_search_config
-            ? Channel.fromPath(params.custom_search_config)
-            : ch_crosslink_config
+        ch_search_params = ch_scout_search_params.first()
+        ch_filter_params = ch_scout_filter_params.first()
 
         //
-        // MODULE: Run Scout crosslink search
+        // MODULE: Run Scout crosslink search (per-sample, -no_filter)
         //
         SCOUT_SEARCH (
             ch_mzml,
-            ch_search_config,
-            ch_crosslink_config,
+            ch_search_params,
+            ch_filter_params,
             ch_fasta
         )
         ch_versions = ch_versions.mix(SCOUT_SEARCH.out.versions.first())
 
         // -----------------------------------------------------------------
-        // Scout FDR filtering
+        // Scout FDR filtering (aggregated across all samples)
         // -----------------------------------------------------------------
 
         if (params.do_fdr) {
@@ -186,12 +198,19 @@ workflow RELINK {
             //
             SCOUT_FILTER (
                 SCOUT_SEARCH.out.buf_files.map { meta, buf -> buf }.collect(),
-                ch_crosslink_config,
+                ch_filter_params,
                 ch_fasta
             )
             ch_versions = ch_versions.mix(SCOUT_FILTER.out.versions.first())
 
-            ch_fdr_results = SCOUT_FILTER.out.results
+            //
+            // MODULE: Export Scout results to mzIdentML 1.3 (native Scout CLI)
+            //
+            SCOUT_MZIDENTML (
+                SCOUT_FILTER.out.scout_file,
+                ch_mzml.map { meta, mzml -> mzml }.collect()
+            )
+            ch_versions = ch_versions.mix(SCOUT_MZIDENTML.out.versions.first())
         }
 
     } else {
@@ -199,20 +218,7 @@ workflow RELINK {
     }
 
     // =========================================================================
-    // STEP 3: mzIdentML Export
-    // =========================================================================
-
-    if (params.do_fdr) {
-        MZIDENTML_EXPORT (
-            ch_fdr_results,
-            ch_fasta,
-            params.search_engine
-        )
-        ch_versions = ch_versions.mix(MZIDENTML_EXPORT.out.versions.first())
-    }
-
-    // =========================================================================
-    // STEP 4: Reporting
+    // STEP 3: Reporting
     // =========================================================================
 
     //

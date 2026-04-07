@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """
-Recalibrate MGF files based on mass errors calculated from xiSEARCH linear search results.
+Recalibrate mzML files based on mass errors calculated from xiSEARCH linear search results.
 
 This script:
 1. Reads xiSEARCH linear search results and peak annotations
 2. Calculates precursor (MS1) and fragment (MS2) mass errors
-3. Recalibrates the MGF file by applying the calculated corrections
+3. Recalibrates the mzML file by applying the calculated corrections
 4. Optionally generates mass error distribution plots
 """
 
@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import NamedTuple
 
 import polars as pl
-from pyopenms import MascotGenericFile, MSExperiment
+from pyopenms import MzMLFile, MSExperiment
 
 
 class MassError(NamedTuple):
@@ -52,7 +52,7 @@ def calculate_mass_error(
         .with_columns(pl.col("match score").str.replace_all(",", "").cast(pl.Float64))
         .filter((pl.col("decoy") == 0) & (pl.col("match score") > minimum_match_score))
         .with_columns(pl.col("Scan").str.replace_all(",", "").cast(pl.Int64))
-        .with_columns(pl.col("Run").replace("", None).cast(pl.Int64))
+        .with_columns(pl.col("Run").replace("", None))
         .with_columns(
             pl.col("Precursor Error").str.replace_all(",", "").cast(pl.Float64)
         )
@@ -69,7 +69,7 @@ def calculate_mass_error(
         .with_columns(pl.col("CalcMZ").str.replace_all(",", "").cast(pl.Float64))
         .with_columns(pl.col("MS2Error").str.replace_all(",", "").cast(pl.Float64))
         .with_columns(pl.col("ScanNumber").str.replace_all(",", "").cast(pl.Int64))
-        .with_columns(pl.col("Run").replace("", None).cast(pl.Int64))
+        .with_columns(pl.col("Run").replace("", None))
         .with_columns(pl.col("IsPrimaryMatch").str.replace_all(",", "").cast(pl.Int64))
     )
 
@@ -110,21 +110,21 @@ def calculate_mass_error(
     return MassError(precursor_error, ms2_error), precursor_error_df, ms2_error_df
 
 
-def recalibrate_mgf(
-    mgf_path: Path,
+def recalibrate_spectra(
+    spectra_path: Path,
     output_path: Path,
     mass_error: MassError,
 ) -> None:
     """
-    Apply mass recalibration to an MGF file.
+    Apply mass recalibration to an mzML file.
 
     Args:
-        mgf_path: Path to input MGF file
-        output_path: Path to write recalibrated MGF
+        spectra_path: Path to input mzML file
+        output_path: Path to write recalibrated mzML
         mass_error: MassError with precursor and MS2 corrections in ppm
     """
     exp = MSExperiment()
-    MascotGenericFile().load(str(mgf_path), exp)
+    MzMLFile().load(str(spectra_path), exp)
 
     recalibrated_spectra = []
     for spectrum in exp:
@@ -145,7 +145,7 @@ def recalibrate_mgf(
         recalibrated_spectra.append(spectrum)
 
     exp.setSpectra(recalibrated_spectra)
-    MascotGenericFile().store(str(output_path), exp)
+    MzMLFile().store(str(output_path), exp)
 
 
 def generate_plots(
@@ -207,7 +207,7 @@ def generate_plots(
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Recalibrate MGF files based on xiSEARCH linear search results"
+        description="Recalibrate mzML files based on xiSEARCH linear search results"
     )
     parser.add_argument(
         "--linear-results",
@@ -222,16 +222,16 @@ def main():
         help="Path to xiSEARCH peaks TSV file",
     )
     parser.add_argument(
-        "--mgf",
+        "--spectra",
         type=Path,
         required=True,
-        help="Path to input MGF file",
+        help="Path to input mzML file",
     )
     parser.add_argument(
         "--output",
         type=Path,
         required=True,
-        help="Path to output recalibrated MGF file",
+        help="Path to output recalibrated mzML file",
     )
     parser.add_argument(
         "--error-report",
@@ -269,7 +269,7 @@ def main():
     for path, name in [
         (args.linear_results, "linear results"),
         (args.peaks, "peaks"),
-        (args.mgf, "MGF"),
+        (args.spectra, "spectra"),
     ]:
         if not path.exists():
             print(f"Error: {name} file not found: {path}", file=sys.stderr)
@@ -307,10 +307,10 @@ def main():
     error_report.write_csv(args.error_report)
     print(f"Wrote error report to {args.error_report}")
 
-    # Recalibrate MGF
-    print(f"Recalibrating {args.mgf}...")
-    recalibrate_mgf(args.mgf, args.output, mass_error)
-    print(f"Wrote recalibrated MGF to {args.output}")
+    # Recalibrate spectra
+    print(f"Recalibrating {args.spectra}...")
+    recalibrate_spectra(args.spectra, args.output, mass_error)
+    print(f"Wrote recalibrated mzML to {args.output}")
 
     # Generate plots if requested
     if args.plot and precursor_error_df is not None:
