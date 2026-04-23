@@ -80,8 +80,8 @@ workflow RELINK {
         // =================================================================
 
         // Collect configs (single value channels)
-        ch_xi_linear = ch_linear_config.first()
-        ch_xi_crosslink = ch_crosslink_config.first()
+        ch_xi_linear = ch_linear_config
+        ch_xi_crosslink = ch_crosslink_config
 
         // -----------------------------------------------------------------
         // Linear Search (for mass recalibration)
