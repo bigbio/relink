@@ -137,10 +137,12 @@ def recalibrate_spectra(
             precursor.setMZ(corrected_mz)
         spectrum.setPrecursors(precursors)
 
-        # Recalibrate MS2 peak masses
-        mz_array, intensity_array = spectrum.get_peaks()
-        corrected_mz_array = mz_array / (1 + mass_error.ms2_error / 10.0**6)
-        spectrum.set_peaks((corrected_mz_array, intensity_array))
+        # mzML contains both MS1 and MSn spectra; only apply the fragment-ion
+        # correction to fragmentation scans.
+        if spectrum.getMSLevel() > 1:
+            mz_array, intensity_array = spectrum.get_peaks()
+            corrected_mz_array = mz_array / (1 + mass_error.ms2_error / 10.0**6)
+            spectrum.set_peaks((corrected_mz_array, intensity_array))
 
         recalibrated_spectra.append(spectrum)
 
