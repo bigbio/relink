@@ -173,25 +173,28 @@ workflow RELINK {
         // Scout path
         // =================================================================
 
-        ch_search_params = ch_scout_search_params.first()
-        ch_filter_params = ch_scout_filter_params.first()
+        if (params.do_crosslinking_search) {
+            ch_search_params = ch_scout_search_params.first()
+            ch_filter_params = ch_scout_filter_params.first()
 
-        //
-        // MODULE: Run Scout crosslink search (per-sample, -no_filter)
-        //
-        SCOUT_SEARCH (
-            ch_mzml,
-            ch_search_params,
-            ch_filter_params,
-            ch_fasta
-        )
-        ch_versions = ch_versions.mix(SCOUT_SEARCH.out.versions.first())
+            //
+            // MODULE: Run Scout crosslink search (per-sample, -no_filter)
+            //
+            SCOUT_SEARCH (
+                ch_mzml,
+                ch_search_params,
+                ch_filter_params,
+                ch_fasta
+            )
+            ch_versions = ch_versions.mix(SCOUT_SEARCH.out.versions.first())
 
-        // -----------------------------------------------------------------
-        // Scout FDR filtering (aggregated across all samples)
-        // -----------------------------------------------------------------
+            // -----------------------------------------------------------------
+            // Scout FDR filtering (aggregated across all samples)
+            // -----------------------------------------------------------------
 
-        if (params.do_fdr) {
+            if (!params.do_fdr) {
+                log.warn "Scout requires SCOUT_FILTER to produce final outputs; continuing with FDR enabled."
+            }
 
             //
             // MODULE: Run Scout FDR filtering
