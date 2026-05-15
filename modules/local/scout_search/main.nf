@@ -25,6 +25,13 @@ process SCOUT_SEARCH {
     def args = task.ext.args ?: ''
     def scout_cmd = task.ext.scout_cmd ?: '/opt/scout/run_scout.sh'
     """
+    # Scout's parallel search path (ScoutCore.RunSpectraSearchParallel) sizes its
+    # ParallelOptions.MaxDegreeOfParallelism from System.Environment.ProcessorCount.
+    # Scout has no -threads CLI flag and no Threads key in search_params.json, so
+    # the only way to honor Nextflow's task.cpus is through the .NET runtime hint.
+    export DOTNET_PROCESSOR_COUNT=${task.cpus}
+    export DOTNET_gcServer=1
+
     # Inject actual file paths into search_params.json
     python3 -c "
 import json
