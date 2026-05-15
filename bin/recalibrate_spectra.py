@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import NamedTuple
 
 import polars as pl
-from pyopenms import MzMLFile, MSExperiment
+from pyopenms import MSExperiment, MzMLFile
 
 
 class MassError(NamedTuple):
