@@ -14,7 +14,7 @@ process XIFDR {
     val link_fdr
 
     output:
-    path "FDR_*.csv", emit: results
+    path "FDR.mzid", emit: results
     path "versions.yml", emit: versions
 
     when:
@@ -32,6 +32,7 @@ process XIFDR {
         --linkfdr=${link_fdr} \\
         --xiversion=1.8.11 \\
         --csvOutDir=. \\
+        --writemzid \\
         ${args} \\
         ${input_files}
 

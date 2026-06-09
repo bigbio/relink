@@ -160,8 +160,7 @@ workflow RELINK {
                 // MODULE: Export xiFDR results to mzIdentML
                 //
                 MZIDENTML_EXPORT (
-                    XIFDR.out.results,
-                    ch_fasta
+                    XIFDR.out.results
                 )
                 ch_versions = ch_versions.mix(MZIDENTML_EXPORT.out.versions.first())
             }

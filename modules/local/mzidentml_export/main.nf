@@ -8,10 +8,9 @@ process MZIDENTML_EXPORT {
 
     input:
     path fdr_results
-    path fasta
 
     output:
-    path "*.mzid", emit: mzidentml
+    path "results.mzid", emit: mzidentml
     path "versions.yml", emit: versions
 
     when:
@@ -20,11 +19,10 @@ process MZIDENTML_EXPORT {
     script:
     def args = task.ext.args ?: ''
     """
-    xi-mzidentml-converter \\
-        --csv ${fdr_results} \\
-        --fasta ${fasta} \\
-        --output results.mzid \\
-        ${args}
+    process_dataset \\
+        --validate ${fdr_results} \\
+		--no-peak-list \\
+        ${args} > results.mzid
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
