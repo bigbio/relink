@@ -12,7 +12,6 @@ include { XIFDR                         } from '../modules/local/xifdr/main'
 include { SCOUT_SEARCH                  } from '../modules/local/scout_search/main'
 include { SCOUT_FILTER                  } from '../modules/local/scout_filter/main'
 include { SCOUT_MZIDENTML               } from '../modules/local/scout_mzidentml/main'
-include { MZIDENTML_EXPORT              } from '../modules/local/mzidentml_export/main'
 include { PMULTIQC                      } from '../modules/bigbio/pmultiqc/main'
 include { paramsSummaryMap              } from 'plugin/nf-validation'
 include { paramsSummaryMultiqc          } from '../subworkflows/nf-core/utils_nfcore_pipeline'
@@ -156,13 +155,9 @@ workflow RELINK {
                 )
                 ch_versions = ch_versions.mix(XIFDR.out.versions.first())
 
-                //
-                // MODULE: Export xiFDR results to mzIdentML
-                //
-                MZIDENTML_EXPORT (
-                    XIFDR.out.results
-                )
-                ch_versions = ch_versions.mix(MZIDENTML_EXPORT.out.versions.first())
+
+                ch_mzid_results = XIFDR.out.results
+
             }
         }
 
@@ -252,7 +247,8 @@ workflow RELINK {
 
     PMULTIQC (
         [ id: 'relink' ],
-        ch_multiqc_files.collect()
+        ch_multiqc_files.collect(),
+        ch_mzid_results.collect()
     )
     ch_multiqc_report = PMULTIQC.out.report.map { meta, report -> report }
     ch_versions = ch_versions.mix(PMULTIQC.out.versions)

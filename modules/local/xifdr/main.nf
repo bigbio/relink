@@ -14,7 +14,7 @@ process XIFDR {
     val link_fdr
 
     output:
-    path "FDR.mzid", emit: results
+    path "results.mzid", emit: results
     path "versions.yml", emit: versions
 
     when:
@@ -35,6 +35,8 @@ process XIFDR {
         --writemzid \\
         ${args} \\
         ${input_files}
+
+    mv FDR.mzid results.mzid
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
