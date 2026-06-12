@@ -51,6 +51,7 @@ workflow BIGBIO_RELINK {
     )
 
     emit:
+	mzidentml = RELINK.out.mzidentml
     multiqc_report = RELINK.out.multiqc_report // channel: /path/to/multiqc_report.html
 
 }

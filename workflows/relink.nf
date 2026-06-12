@@ -154,8 +154,6 @@ workflow RELINK {
                     params.link_fdr
                 )
                 ch_versions = ch_versions.mix(XIFDR.out.versions.first())
-
-
                 ch_mzid_results = XIFDR.out.results
 
             }
@@ -248,12 +246,12 @@ workflow RELINK {
     PMULTIQC (
         [ id: 'relink' ],
         ch_multiqc_files.collect(),
-        ch_mzid_results.collect()
     )
     ch_multiqc_report = PMULTIQC.out.report.map { meta, report -> report }
     ch_versions = ch_versions.mix(PMULTIQC.out.versions)
 
     emit:
+	mzidentml = ch_mzid_results
     multiqc_report = ch_multiqc_report // channel: /path/to/multiqc_report.html
     versions       = ch_versions       // channel: [ path(versions.yml) ]
 }

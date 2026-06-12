@@ -10,13 +10,11 @@ process PMULTIQC {
     input:
     val meta
     path results
-	path mzid
 
     output:
-    tuple val(meta), path("${prefix}_multiqc_report/*.html"), emit: report
+    tuple val(meta), path("relink_multiqc_report/*.html"), emit: report
     path "*.db", optional: true, emit: quantmsdb
     path "versions.yml", emit: versions
-    path "results.mzid", emit: data
 
     script:
     def args = task.ext.args ?: ''
@@ -24,9 +22,9 @@ process PMULTIQC {
 
     """
     multiqc \\
-        --mzid_plugin ${mzid}\\
         -o ${prefix}_multiqc_report \\
-        ${args}
+        ${args} \\
+		.
 
     cat <<END_VERSIONS > versions.yml
 "PMULTIQC":
