@@ -36,7 +36,7 @@ workflow PIPELINE_INITIALISATION {
 
     main:
 
-    ch_versions = Channel.empty()
+    ch_versions = channel.empty()
 
     //
     // Print version and exit if required and dump pipeline parameters to JSON file
@@ -82,7 +82,7 @@ workflow PIPELINE_INITIALISATION {
     //
     // MODULE: Parse SDRF to generate design TSV and engine-specific configs
     //
-    ch_sdrf = Channel.fromPath(params.input, checkIfExists: true)
+    ch_sdrf = channel.fromPath(params.input, checkIfExists: true)
 
     SDRF_PARSING (
         ch_sdrf,
@@ -120,26 +120,26 @@ workflow PIPELINE_INITIALISATION {
     //
     if (params.search_engine == 'xisearch') {
         ch_linear_config = params.xi_linear_config
-            ? Channel.fromPath(params.xi_linear_config, checkIfExists: true)
+            ? channel.fromPath(params.xi_linear_config, checkIfExists: true)
             : SDRF_PARSING.out.xi_linear_config
         ch_crosslink_config = params.xi_crosslink_config
-            ? Channel.fromPath(params.xi_crosslink_config, checkIfExists: true)
+            ? channel.fromPath(params.xi_crosslink_config, checkIfExists: true)
             : SDRF_PARSING.out.xi_crosslink_config
     } else {
-        ch_linear_config = Channel.empty()
-        ch_crosslink_config = Channel.empty()
+        ch_linear_config = channel.empty()
+        ch_crosslink_config = channel.empty()
     }
 
     if (params.search_engine == 'scout') {
         ch_scout_search_params = params.scout_search_params
-            ? Channel.fromPath(params.scout_search_params, checkIfExists: true)
+            ? channel.fromPath(params.scout_search_params, checkIfExists: true)
             : SDRF_PARSING.out.scout_search_params
         ch_scout_filter_params = params.scout_filter_params
-            ? Channel.fromPath(params.scout_filter_params, checkIfExists: true)
+            ? channel.fromPath(params.scout_filter_params, checkIfExists: true)
             : SDRF_PARSING.out.scout_filter_params
     } else {
-        ch_scout_search_params = Channel.empty()
-        ch_scout_filter_params = Channel.empty()
+        ch_scout_search_params = channel.empty()
+        ch_scout_filter_params = channel.empty()
     }
 
     emit:

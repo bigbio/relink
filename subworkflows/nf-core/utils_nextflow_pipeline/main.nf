@@ -4,15 +4,6 @@
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    IMPORT FUNCTIONS / MODULES / SUBWORKFLOWS
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-*/
-
-import java.nio.file.Files
-import java.nio.file.StandardCopyOption
-
-/*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     SUBWORKFLOW DEFINITION
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
@@ -86,10 +77,10 @@ def dumpParametersToJSON(outdir) {
 
     def target = file("${outdir}/pipeline_info/${filename}")
 
-    Files.move(
+    java.nio.file.Files.move(
         temp_pf.toPath(),
         target,
-        StandardCopyOption.REPLACE_EXISTING
+        java.nio.file.StandardCopyOption.REPLACE_EXISTING
     )
 }
 
@@ -103,7 +94,7 @@ def checkCondaChannels() {
         def stdout = new StringBuffer()
         proc.waitForProcessOutput(stdout, System.err)
         def result = stdout.toString()
-        for (channel in channels) {
+        channels.each { channel ->
             if (!result.contains(channel)) {
                 log.warn "Channel '${channel}' not found in Conda configuration"
             }
