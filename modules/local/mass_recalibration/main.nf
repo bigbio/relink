@@ -8,11 +8,11 @@ process MASS_RECALIBRATION {
         'ghcr.io/bigbio/relink:1.0.0' }"
 
     input:
-    tuple val(meta), path(linear_results), path(peaks_file), path(mgf_file)
+    tuple val(meta), path(linear_results), path(peaks_file), path(spectra_file)
     val do_plotting
 
     output:
-    tuple val(meta), path("recal_*.mgf"), emit: mgf
+    tuple val(meta), path("recal_*.mzML"), emit: mzml
     tuple val(meta), path("mass_error_*.csv"), emit: error_report
     tuple val(meta), path("*.png"), optional: true, emit: plots
     path "versions.yml", emit: versions
@@ -25,11 +25,11 @@ process MASS_RECALIBRATION {
     def prefix = task.ext.prefix ?: "${meta.id}"
     def plot_flag = do_plotting ? "--plot" : ""
     """
-    recalibrate_mgf.py \\
+    recalibrate_spectra.py \\
         --linear-results '${linear_results}' \\
         --peaks '${peaks_file}' \\
-        --mgf '${mgf_file}' \\
-        --output 'recal_${prefix}.mgf' \\
+        --spectra '${spectra_file}' \\
+        --output 'recal_${prefix}.mzML' \\
         --error-report 'mass_error_${prefix}.csv' \\
         --prefix '${prefix}' \\
         ${plot_flag} \\
@@ -46,7 +46,7 @@ process MASS_RECALIBRATION {
     stub:
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
-    touch 'recal_${prefix}.mgf'
+    touch 'recal_${prefix}.mzML'
     touch 'mass_error_${prefix}.csv'
 
     cat <<-END_VERSIONS > versions.yml

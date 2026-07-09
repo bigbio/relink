@@ -75,9 +75,12 @@ def dumpParametersToJSON(outdir) {
     def jsonStr    = groovy.json.JsonOutput.toJson(params)
     temp_pf.text   = groovy.json.JsonOutput.prettyPrint(jsonStr)
 
-    nextflow.io.file.FileHelper.moveTo(
+    def target = file("${outdir}/pipeline_info/${filename}")
+
+    java.nio.file.Files.move(
         temp_pf.toPath(),
-        nextflow.io.file.FileHelper.toPath("${outdir}/pipeline_info/${filename}")
+        target,
+        java.nio.file.StandardCopyOption.REPLACE_EXISTING
     )
 }
 
@@ -91,7 +94,7 @@ def checkCondaChannels() {
         def stdout = new StringBuffer()
         proc.waitForProcessOutput(stdout, System.err)
         def result = stdout.toString()
-        for (channel in channels) {
+        channels.each { channel ->
             if (!result.contains(channel)) {
                 log.warn "Channel '${channel}' not found in Conda configuration"
             }

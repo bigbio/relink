@@ -4,6 +4,14 @@
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    IMPORT FUNCTIONS / MODULES / SUBWORKFLOWS
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
+
+include { paramsSummaryLog; validateParameters; } from 'plugin/nf-schema'
+
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     SUBWORKFLOW DEFINITION
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
@@ -19,15 +27,7 @@ workflow UTILS_NFCORE_PIPELINE {
     schema_filename
 
     main:
-    def valid_config = true
-
-    //
-    // Print help message if required
-    //
-    if (help) {
-        log.info pre_help_text + paramsHelp(workflow_command, parameters_schema: schema_filename) + post_help_text
-        System.exit(0)
-    }
+        valid_config = channel.value(true)
 
     //
     // Print parameter summary log to screen
@@ -74,12 +74,12 @@ def methodsDescriptionText(mqc_methods_yaml) {
 //
 def paramsSummaryMultiqc(summary_params) {
     def summary_section = ''
-    for (group in summary_params.keySet()) {
+    summary_params.keySet().each { group ->
         def group_params = summary_params.get(group)
         if (group_params) {
             summary_section += "    <p style=\"font-size:110%\"><b>$group</b></p>\n"
             summary_section += "    <dl class=\"dl-horizontal\">\n"
-            for (param in group_params.keySet()) {
+            group_params.keySet().each { param ->
                 summary_section += "        <dt>$param</dt><dd><samp>${group_params.get(param) ?: '<span style=\"color:#999999;\">N/A</a>'}</samp></dd>\n"
             }
             summary_section += "    </dl>\n"
@@ -102,9 +102,9 @@ def paramsSummaryMultiqc(summary_params) {
 def softwareVersionsToYAML(ch_versions) {
     return ch_versions
         .unique()
-        .map { processVersions(it) }
+        .map { it -> processVersions(it) }
         .unique()
-        .map { yaml -> yaml.trim() }
+        .map { yaml -> yaml.normalize() }
         .collectFile(name: 'versions.yml', newLine: true, sort: true)
 }
 

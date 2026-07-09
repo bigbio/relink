@@ -26,12 +26,16 @@ include { PIPELINE_COMPLETION     } from './subworkflows/local/utils_nfcore_reli
 */
 
 //
-// WORKFLOW: Run main analysis pipeline depending on type of input
+// WORKFLOW: Run main analysis pipeline
 //
 workflow BIGBIO_RELINK {
 
     take:
-    samplesheet // channel: samplesheet read in from --input
+    ch_files               // channel: [ val(meta), path(file) ]
+    ch_linear_config       // channel: path(xi_linear.conf)
+    ch_crosslink_config    // channel: path(xi_crosslinking.conf)
+    ch_scout_search_params // channel: path(search_params.json)
+    ch_scout_filter_params // channel: path(filter_params.json)
 
     main:
 
@@ -39,10 +43,15 @@ workflow BIGBIO_RELINK {
     // WORKFLOW: Run pipeline
     //
     RELINK (
-        samplesheet
+        ch_files,
+        ch_linear_config,
+        ch_crosslink_config,
+        ch_scout_search_params,
+        ch_scout_filter_params
     )
 
     emit:
+	mzidentml = RELINK.out.mzidentml
     multiqc_report = RELINK.out.multiqc_report // channel: /path/to/multiqc_report.html
 
 }
@@ -72,7 +81,11 @@ workflow {
     // WORKFLOW: Run main workflow
     //
     BIGBIO_RELINK (
-        PIPELINE_INITIALISATION.out.samplesheet
+        PIPELINE_INITIALISATION.out.ch_files,
+        PIPELINE_INITIALISATION.out.ch_linear_config,
+        PIPELINE_INITIALISATION.out.ch_crosslink_config,
+        PIPELINE_INITIALISATION.out.ch_scout_search_params,
+        PIPELINE_INITIALISATION.out.ch_scout_filter_params
     )
 
     //

@@ -14,7 +14,7 @@ process XIFDR {
     val link_fdr
 
     output:
-    path "fdr_*.csv", emit: results
+    path "results.mzid", emit: results
     path "versions.yml", emit: versions
 
     when:
@@ -23,17 +23,20 @@ process XIFDR {
     script:
     def args = task.ext.args ?: ''
     def mem = task.memory.toGiga()
-    def input_files = crosslink_results.collect { "'${it}'" }.join(' ')
+    def input_files = crosslink_results.collect { it -> "'${it}'" }.join(' ')
+    def xifdr_jar = task.ext.xifdr_jar ?: '/opt/xisearch/xiFDR.jar'
     """
-    java -Xmx${mem}g -jar /opt/xisearch/xiFDR.jar \\
+    java -Xmx${mem}g -jar ${xifdr_jar} \\
         --fasta='${fasta}' \\
         --xiconfig='${config}' \\
         --linkfdr=${link_fdr} \\
         --xiversion=1.8.11 \\
-        --csvOutDir=./ \\
-        --csvOutBaseName=fdr_ \\
+        --csvOutDir=. \\
+        --writemzid \\
         ${args} \\
         ${input_files}
+
+    mv FDR.mzid results.mzid
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
@@ -44,7 +47,7 @@ process XIFDR {
 
     stub:
     """
-    touch 'fdr_results.csv'
+    touch 'FDR_results.csv'
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

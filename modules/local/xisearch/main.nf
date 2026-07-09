@@ -9,7 +9,7 @@ process XISEARCH {
         'ghcr.io/bigbio/relink:1.0.0' }"
 
     input:
-    tuple val(meta), path(mgf_file)
+    tuple val(meta), path(spectra_file)
     path fasta
     path config
     val mode  // 'linear' or 'crosslink'
@@ -27,11 +27,12 @@ process XISEARCH {
     def prefix = task.ext.prefix ?: "${meta.id}"
     def mem = task.memory.toGiga()
     def peaks_ext = mode == 'linear' ? 'tsv' : 'csv'
+    def xisearch_jar = task.ext.xisearch_jar ?: '/opt/xisearch/xiSEARCH.jar'
     """
-    java -Xmx${mem}g -jar /opt/xisearch/xiSEARCH.jar \\
+    java -Xmx${mem}g -jar ${xisearch_jar} \\
         --fasta='${fasta}' \\
         --xiconf=UseCPUs:${task.cpus} \\
-        --peaks='${mgf_file}' \\
+        --peaks='${spectra_file}' \\
         --config='${config}' \\
         --output='${prefix}_${mode}.csv' \\
         --peaksout='${prefix}_${mode}.peaks.${peaks_ext}' \\

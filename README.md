@@ -15,9 +15,10 @@ The pipeline is built using [Nextflow](https://www.nextflow.io), a workflow tool
 1. **File Conversion** - Convert Thermo RAW files to MGF format using ThermoRawFileParser
 2. **Linear Search** - Run xiSEARCH linear peptide search for mass error estimation
 3. **Mass Recalibration** - Calculate and apply mass corrections to MS1 and MS2 spectra
-4. **Crosslinking Search** - Run xiSEARCH crosslinking peptide search
-5. **FDR Correction** - Apply xiFDR for false discovery rate estimation
-6. **Reporting** - Generate MultiQC report with analysis summary
+4. **Format Correction** - Convert scientific notation in MGFs to decimal
+5. **Crosslinking Search** - Run xiSEARCH crosslinking peptide search
+6. **FDR Correction** - Apply xiFDR for false discovery rate estimation
+7. **Reporting** - Generate MultiQC report with analysis summary
 
 ## Quick Start
 
@@ -121,4 +122,4 @@ For questions, issues, or feature requests, please open an issue on the [GitHub 
 
 ## License
 
-This pipeline is released under the [Apache 2.0 License](LICENSE).
+This pipeline is released under the [MIT License](LICENSE).

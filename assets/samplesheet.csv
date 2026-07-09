@@ -1,3 +1,2 @@
 sample,file,fasta,xi_linear_config,xi_crosslink_config
-sample1,/path/to/sample1.raw,/path/to/database.fasta,/path/to/xi_linear.conf,/path/to/xi_crosslinking.conf
-sample2,/path/to/sample2.raw,/path/to/database.fasta,/path/to/xi_linear.conf,/path/to/xi_crosslinking.conf
+secondbatch_dssoplate_b1_b2,"https://ftp.pride.ebi.ac.uk/pride/data/archive/2024/08/PXD042173/L1_20211004_MxR_secondbatch_DSSOplate_B1_B2.raw","https://ftp.pride.ebi.ac.uk/pride/data/archive/2024/08/PXD042173/all_320_proteins_from_first_second_third_fourth_fifth_batch.fasta","./assets/test_data/xi_linear.conf","./assets/test_data/xi_crosslinking.conf"
