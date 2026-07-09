@@ -102,7 +102,7 @@ def paramsSummaryMultiqc(summary_params) {
 def softwareVersionsToYAML(ch_versions) {
     return ch_versions
         .unique()
-        .map { processVersions(it) }
+        .map { it -> processVersions(it) }
         .unique()
         .map { yaml -> yaml.normalize() }
         .collectFile(name: 'versions.yml', newLine: true, sort: true)

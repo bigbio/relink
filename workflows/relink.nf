@@ -46,7 +46,7 @@ workflow RELINK {
     // Branch input files by type: RAW files need conversion, mzML pass through
     //
     ch_files
-        .branch {
+        .branch { it ->
             raw: it[1].name.toLowerCase().endsWith('.raw')
             mzml: it[1].name.toLowerCase().endsWith('.mzml')
         }

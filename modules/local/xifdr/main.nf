@@ -23,7 +23,7 @@ process XIFDR {
     script:
     def args = task.ext.args ?: ''
     def mem = task.memory.toGiga()
-    def input_files = crosslink_results.collect { "'${it}'" }.join(' ')
+    def input_files = crosslink_results.collect { it -> "'${it}'" }.join(' ')
     def xifdr_jar = task.ext.xifdr_jar ?: '/opt/xisearch/xiFDR.jar'
     """
     java -Xmx${mem}g -jar ${xifdr_jar} \\
